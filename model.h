@@ -1,20 +1,14 @@
+#ifndef MODEL_H
+#define MODEL_H
+
+#include "settings.h"
+
 typedef struct {
     int x;
     int y;
     int degrees;
     bool carriesMarker;
 } Robot;
-
-typedef struct {
-    int x;
-    int y;
-    bool pickedUp;
-} Marker;
-
-typedef struct {
-    Robot robot;
-    Marker marker;
-} GameObjects;
 
 typedef enum {
     MOVE_FORWARD,
@@ -29,3 +23,17 @@ typedef struct MoveNode {
 typedef struct {
     MoveNode *top;
 } MoveStack;
+
+void initGame(Robot *robot, char grid[gridWidth][gridHeight]);
+bool canMoveForward(Robot *robot, char grid[gridWidth][gridHeight]);
+void forward(Robot *robot, char grid[gridWidth][gridHeight]);
+void right(Robot *robot, char grid[gridWidth][gridHeight]);
+int atMarker(Robot *robot, char grid[gridWidth][gridHeight]);
+void pickUpMarker(Robot *robot);
+
+void pushMove(MoveStack *stack, Move move);
+Move popMove(MoveStack *stack);
+void reverseMove(Robot *robot, Move move, char grid[gridWidth][gridHeight]);
+
+
+#endif

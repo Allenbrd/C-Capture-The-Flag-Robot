@@ -1,17 +1,10 @@
 #ifndef VIEW_H
 #define VIEW_H
 
-#include "settings.h"  // Including the settings header
-#include <stdbool.h>
+#include "model.h"
 
-
-
-void drawBackground();
-void drawRobot(Robot robot);
-void drawMarker(Marker marker);
-void generateCoordinates(Robot *robot, Marker *marker);
-void drawForeground(GameObjects *obj);
-void initScene(GameObjects *obj);
-void update(GameObjects *obj, Move lastMove);
+void drawForeground(Robot *robot, char grid[gridWidth][gridHeight]);
+void initView(Robot *robot, char grid[gridWidth][gridHeight]);
+void update(Robot *robot, char grid[gridWidth][gridHeight], Move lastMove);
 
 #endif

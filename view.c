@@ -1,32 +1,22 @@
-// importing graphics library
-#include "graphics/graphics.h"
-
-// importing local view and settings
-#include "view.h"
-#include "settings.h"
-
-// importing c libraries
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
 #include <string.h>
 
+#include "graphics/graphics.h"
+
+#include "view.h"
+#include "settings.h"
+
+
+// Initializing variable to store the squares' width
 int squareWidth;
 int *pointToSW = &squareWidth;
 
-void drawBackground(){
 
-    // Computing a single square's width
-    *pointToSW = (winWidth-(2*padding))/gridWidth;
-
-    setWindowSize(winWidth, winHeight);
-    background();
-
-    char bgpath[] = "resources/background.png";
-
-    displayImage(bgpath, 0, 0);
-    
+// Draws the game's grid
+void drawGrid(void){
     setColour(black);
 
     // Drawing horizontal lines
@@ -50,130 +40,151 @@ void drawBackground(){
     }
 }
 
-void drawRobot(Robot robot){
+void drawSmallMarker(Robot *robot, double x, double y){
+    if(robot->carriesMarker == true){
+        double imgX = x+squareWidth/2.5;
+        double imgY = y-squareWidth/3.5;
 
-    int imgPadding = (squareWidth - imageWidth) / 2; 
+        displayImage(smallMarkerImg, (int)imgX, (int)imgY); // renders the small marker's image if robot is carrying it
+    }
+}
 
-    // computing the robot's degree of rotation
-    int direction = robot.degrees%360;
+void drawRobot(Robot *robot){
+
+    // Computing the needed padding to center robot on square
+    int imgPadding = (squareWidth - robotWidth) / 2; 
+
+    // Computing the robot's rotation angle for direction
+    int direction = robot->degrees%360;
 
     // converting square postions to actual coordinates
-    double x = padding + (robot.x) * squareWidth + imgPadding;
-    double y = padding + (robot.y) * squareWidth + imgPadding;
+    double x = padding + (robot->x) * squareWidth + imgPadding;
+    double y = padding + (robot->y) * squareWidth + imgPadding;
 
     char imgSource[] = "frame_00_delay-0.1s.png";
+
+    drawSmallMarker(robot, x, y);
 
     // defining drawing positions according to provided angle
     switch(direction){
 
         case 0: // if 0 degrees, face north
             { 
-                char path[] = "resources/soldier/right/";
+                char path[] = "assets/soldier/right/";
                 strcat(path, imgSource);
-                displayImage(path, (int)x, (int)y); // renders the small marker's image if robot is carrying it
+                displayImage(path, (int)x, (int)y);
                 break;
             }
 
         case 90: // if 90 degrees, face east
             {
-                char path[] = "resources/soldier/right/";
+                char path[] = "assets/soldier/right/";
                 strcat(path, imgSource);
-                displayImage(path, (int)x, (int)y); // renders the small marker's image if robot is carrying it
+                displayImage(path, (int)x, (int)y);
                 break;
             }
 
         case 180: // if 180 degrees, face south
             {
-                char path[] = "resources/soldier/left/";
+                char path[] = "assets/soldier/left/";
                 strcat(path, imgSource);
-                displayImage(path, (int)x, (int)y); // renders the small marker's image if robot is carrying it
+                displayImage(path, (int)x, (int)y);
                 break;
             }
 
         case 270: // if 180 degrees, face south
             {
-                char path[] = "resources/soldier/left/";
+                char path[] = "assets/soldier/left/";
                 strcat(path, imgSource);
-                displayImage(path, (int)x, (int)y); // renders the small marker's image if robot is carrying it
+                displayImage(path, (int)x, (int)y);
                 break;
             }
     }
 
-    // if(robot.carriesMarker == true){
-    //     double imgX = x;
-    //     double imgY = y;
-
-    //     displayImage(smallMarkerImg, (int)x, (int)y); // renders the small marker's image if robot is carrying it
-    // }
+    
 
 }
 
 // Draws the marker
-void drawMarker(Marker marker){
+void drawMarker(char grid[gridWidth][gridHeight]){
+    // Looping trough the grid to identify the marker's position
+    for (int i = 0; i < gridWidth; ++i) {
+        for (int j = 0; j < gridHeight; ++j) {
+            if (grid[i][j] == 'm') {
+                // Computing the marker's coordinates
+                double xCoordinates = padding + i * squareWidth;
+                double yCoordinates = padding + j * squareWidth;
 
-    // Computing the marker's actual coordinates
-    double xCoordinates = padding + marker.x * squareWidth;
-    double yCoordinates = padding + marker.y * squareWidth;
-
-    displayImage(largeMarkerImg, xCoordinates, yCoordinates); // Rendering the marker's image
+                displayImage(largeMarkerImg, xCoordinates, yCoordinates); // Rendering the marker's image
+            }
+        }
+    }
 }
 
-static int coordinates[4]; // Use static storage duration for the array
+// Draws obstacles
+void drawObstacles(char grid[gridWidth][gridHeight]){
+    // Looping trough the grid to identify the marker's position
+    for (int i = 0; i < gridWidth; ++i) {
+        for (int j = 0; j < gridHeight; ++j) {
+            if (grid[i][j] == 'o') {
+                // Computing the marker's coordinates
+                double xCoordinates = padding + ((squareWidth-obstacleWidth)/2) + i * squareWidth;
+                double yCoordinates = padding + ((squareWidth-obstacleWidth)/2) + j * squareWidth;
 
-
-// Generates random coordinates for game objects
-void generateCoordinates(Robot *robot, Marker *marker) {
-    srand((unsigned int)time(NULL)); // initializing the rand function
-
-    // Ensure that robot and marker don't overlap
-    do {
-        marker->x = rand() % gridWidth;
-        marker->y = rand() % gridHeight;
-        
-        robot->x = rand() % gridWidth;
-        robot->y = rand() % gridHeight;
-
-        robot->degrees = (rand() % 4) * 90;
-
-    } while (robot->x == marker->x && robot->y == marker->y);
+                displayImage(obstacleImg, xCoordinates, yCoordinates); // Rendering the marker's image
+            }
+        }
+    }
 }
 
+// Draws foreground
+void drawForeground(Robot *robot, char grid[gridWidth][gridHeight]){
 
-// Drawing game objects
-void drawForeground(GameObjects *obj){
     foreground();
 
-    if(obj->marker.pickedUp == false){
-        drawMarker(obj->marker); // drawing the marker if it has not been picked up yet
+    drawMarker(grid);
+    drawRobot(robot);
+}
+
+void drawBackground(Robot *robot, char grid[gridWidth][gridHeight]){
+
+    // Computing a single square's width
+    *pointToSW = (winWidth-(2*padding))/gridWidth;
+
+    setWindowSize(winWidth, winHeight);
+
+    background();
+
+    char bgPath[] = "assets/background.png";
+
+    displayImage(bgPath, 0, 0);
+
+    displayImage(homeImg, padding + (robot->x * squareWidth), padding + (robot->y * squareWidth));
+
+    if(showGrid){
+        drawGrid();
     }
 
-    drawRobot(obj->robot); // drawing the robot
+    drawObstacles(grid);
+
 }
 
 // Initializing the game's scene and interface
-void initScene(GameObjects *obj){
+void initView(Robot *robot, char grid[gridWidth][gridHeight]){
 
-    drawBackground();
-    generateCoordinates(&obj->robot, &obj->marker); // passing pointers to the elements
-    drawForeground(obj); // passing the pointer to drawForeground
+    drawBackground(robot, grid);
+    drawForeground(robot, grid); // passing the pointer to drawForeground
 
 }
 
-// Update the game's interface to display changes and new positions
-void update(GameObjects *obj, Move lastMove)
-{
-    foreground();
-    clear(); // clearing foreground view
-    if(obj->marker.pickedUp == false){
-        drawMarker(obj->marker); // drawing the marker if it has not been picked up yet
-    }
 
+// Draws tobot animation when moving to new square
+void animateRobot(Robot *robot, char grid[gridWidth][gridHeight], Move lastMove){
+    // Computing the time and distance to be 
     int timePerFrame = waitTime/numbeOfFrames;
     int distancePerFrame = squareWidth/numbeOfFrames;
 
-    int imgPadding = (squareWidth - imageWidth) / 2; 
-
-    // double x, y;
+    int imgPadding = (squareWidth - robotWidth) / 2; 
 
     char frames[10][24] = {
         "frame_00_delay-0.1s.png",
@@ -188,72 +199,123 @@ void update(GameObjects *obj, Move lastMove)
         "frame_09_delay-0.1s.png",
     };
 
-
-    char iteration;
-
-
     if(lastMove == MOVE_FORWARD){
 
-        for(int i = 0; i < 10; i++){
+        char iteration;
+
+        // for each frame (in ten frames), drawing new robot position
+        for(int i = 0; i < numbeOfFrames; i++){
 
             foreground();
             clear(); // clearing foreground view
-            if(obj->marker.pickedUp == false){
-                drawMarker(obj->marker); // drawing the marker if it has not been picked up yet
+            if(robot->carriesMarker == false){
+                drawMarker(grid); // drawing the marker if it has not been picked up yet
             }
 
             sprintf(&iteration, "%d", i);
+
             double x, y;
-            int direction = obj->robot.degrees % 360; 
             char path[100];
 
-            switch(direction){
+            switch(robot->degrees % 360){
                 case 0: // if 0 degrees, face north
                     {
-                    x = padding + (obj->robot.x) * squareWidth + imgPadding;
-                    y = (padding + (obj->robot.y + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
-                    strcpy(path, "resources/soldier/right/");
+                    if(robot->carriesMarker == true){ // if the robot carries a marker, draw it opposite to its direction
+                        x = padding + (robot->x) * squareWidth + imgPadding;
+                        y = (padding + (robot->y - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
+                    }else{ // else, draw it going its direction's way
+                        x = padding + (robot->x) * squareWidth + imgPadding;
+                        y = (padding + (robot->y + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
+                    }
+                    strcpy(path, "assets/soldier/right/");
+                    if(i==0){
+                        strcat(path, "frame_00_delay-0.1s.png");
+                    }else{
                     strcat(path, frames[i]);
-                    displayImage(path, (int)x, (int)y);
+                    }
                     break;
                     }
                 case 90: // if 90 degrees, face east
                     {
-                    x = (padding + (obj->robot.x - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
-                    y = padding + (obj->robot.y) * squareWidth + imgPadding;
-                    strcpy(path, "resources/soldier/right/");
+                    if(robot->carriesMarker == true){
+                        x = (padding + (robot->x + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
+                        y = padding + (robot->y) * squareWidth + imgPadding;
+                        strcpy(path, "assets/soldier/left/");
+                    }else{
+                        x = (padding + (robot->x - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
+                        y = padding + (robot->y) * squareWidth + imgPadding;
+                        strcpy(path, "assets/soldier/right/");
+                    }
+                    if(i==0){
+                        strcat(path, "frame_00_delay-0.1s.png");
+                    }else{
                     strcat(path, frames[i]);
-                    displayImage(path, (int)x, (int)y);
+                    }
                     break;
                     }
                 case 180: // if 180 degrees, face south
                     { 
-                    x = padding + (obj->robot.x) * squareWidth + imgPadding;
-                    y = (padding + (obj->robot.y - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
-                    strcpy(path, "resources/soldier/left/");
+                    if(robot->carriesMarker == true){
+                        x = padding + (robot->x) * squareWidth + imgPadding;
+                        y = (padding + (robot->y + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
+                        strcpy(path, "assets/soldier/right/");
+                    }else{
+                        x = padding + (robot->x) * squareWidth + imgPadding;
+                        y = (padding + (robot->y - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
+                        strcpy(path, "assets/soldier/left/");
+                    }
+                    if(i==0){
+                        strcat(path, "frame_00_delay-0.1s.png");
+                    }else{
                     strcat(path, frames[i]);
-                    displayImage(path, (int)x, (int)y);
+                    }
                     break;
                     }
                 case 270: // if 270 degrees, face west
                     {
-                    x = (padding + (obj->robot.x + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
-                    y = padding + (obj->robot.y) * squareWidth + imgPadding;
-                    strcpy(path, "resources/soldier/left/");
+                    if(robot->carriesMarker == true){ // if the robot carries a marker, draw it opposite to its direction
+                        x = (padding + (robot->x - 1) * squareWidth) + imgPadding*(1+i/10) + i * distancePerFrame;
+                        y = padding + (robot->y) * squareWidth + imgPadding;
+                        strcpy(path, "assets/soldier/right/");
+                    }else{ 
+                        x = (padding + (robot->x + 1) * squareWidth) + imgPadding*(1+i/10) - i * distancePerFrame;
+                        y = padding + (robot->y) * squareWidth + imgPadding;
+                        strcpy(path, "assets/soldier/left/");
+                    }
+                    if(i==0){
+                        strcat(path, "frame_00_delay-0.1s.png");
+                    }else{
                     strcat(path, frames[i]);
-                    displayImage(path, (int)x, (int)y);
+                    }
                     break;
                     }
             }
+
+            displayImage(path, (int)x, (int)y);
+
+            drawSmallMarker(robot, x, y);
 
             sleep(timePerFrame);
         }
 
     }else{
 
-        drawRobot(obj->robot);
+        // If the robot, is not moving forward, simply draw it idle
+        drawRobot(robot);
 
         sleep(timePerFrame);
     }
+}
 
+// Update the game's interface to display changes and new positions
+void update(Robot *robot, char grid[gridWidth][gridHeight], Move lastMove)
+{
+    foreground();
+    clear(); // clearing foreground view
+    if(robot->carriesMarker == false){
+        drawMarker(grid); // drawing the marker if it has not been picked up yet
+    }
+
+    animateRobot(robot, grid, lastMove);
+    
 }

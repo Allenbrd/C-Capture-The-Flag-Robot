@@ -62,6 +62,8 @@
     "settings.h": "c",
     "view.h": "c",
     "stdbool.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "stdio.h": "c",
+    "time.h": "c"
   }
 }

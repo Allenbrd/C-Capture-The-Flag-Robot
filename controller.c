@@ -1,147 +1,67 @@
-int main(void) {
-    // initializing game objects
-    Robot robot = {0, 0, 0, false};
-    Marker marker = {0, 0, false};
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
-    GameObjects objects = {robot, marker};
-    GameObjects tempObjects = objects; // Initialize temporary object to check if move is feasable
-    MoveStack moveStack = {NULL}; // Initialize the stack to keep track of moves
+#include "model.h"
+#include "settings.h"
 
-    initScene(&objects); // initializing the scene's view
+void search(Robot *robot, char grid[gridWidth][gridHeight], MoveStack *moveStack){
+    int random;
+    while(robot->carriesMarker == false){
+        
+        if(atMarker(robot, grid)){
+            pickUpMarker(robot);
+        }
 
-    bool markerFound = false;
-
-    // Move to the bottom left corner of the grid
-        bool atSouthBorder = false;
-        while(atSouthBorder == false){
-            if (atMarker(&objects)) {
-                pickUpMarker(&objects);
-                markerFound = true;
+        random = rand() % 10;
+        switch(random){
+            case 0 ... 7:
+                if(canMoveForward(robot, grid)){
+                    forward(robot, grid);
+                    pushMove(moveStack, MOVE_FORWARD);
+                }
                 break;
-            }
-
-            while(objects.robot.degrees != 180){ // Making the robot face south
-                right(&objects);
-                pushMove(&moveStack, TURN_RIGHT);
-            }
-
-            if(canGoForward(&objects) == true) {
-                forward(&objects);
-                pushMove(&moveStack, MOVE_FORWARD);
-            }else{
-                atSouthBorder = true;
-            }
-            
-        }
-
-        bool atWestBorder = false;
-        while(atWestBorder == false){
-
-            if (atMarker(&objects)) {
-                pickUpMarker(&objects);
-                markerFound = true;
+            case 8:
+                right(robot, grid);
+                pushMove(moveStack, TURN_RIGHT);
                 break;
-            }
-            
-            while(objects.robot.degrees%360 != 270){
-                right(&objects);
-                pushMove(&moveStack, TURN_RIGHT);
-            }
-
-            if (canGoForward(&objects) == true) {
-                forward(&objects);
-                pushMove(&moveStack, MOVE_FORWARD);
-            }else{
-                atWestBorder = true;
-            }
-
+            case 9:
+                for(int i = 0; i < 3; i++){
+                    right(robot, grid);
+                    pushMove(moveStack, TURN_RIGHT);
+                }
+                break;
         }
-
-
-
-    // Reset robot's direction to face east (right)
-    while(objects.robot.degrees%360 != 90){
-        right(&objects);
-        pushMove(&moveStack, TURN_RIGHT);
     }
-
-    // int direction = 1; // 1 for right, -1 for left
-
-    // Main game loop
-    while (!markerFound || moveStack.top != NULL) {
-        if (!markerFound) {
-            if (atMarker(&objects)) {
-                pickUpMarker(&objects);
-                markerFound = true;
-            } else {
-
-                bool atteinedWall = false;
-
-                while(atteinedWall == false){
-                    if (atMarker(&objects)) {
-                        pickUpMarker(&objects);
-                        markerFound = true;
-                        break;
-                    }
-                   
-                    if(canGoForward(&objects) == false){
-                        atteinedWall = true;
-                    }else{
-                        forward(&objects);
-                        pushMove(&moveStack, MOVE_FORWARD);
-                    }
-
-                }
-
-                // Reset robot's direction to face north (updwards)
-                while(objects.robot.degrees%360 != 0){
-                    right(&objects);
-                    pushMove(&moveStack, TURN_RIGHT);
-                }
-                forward(&objects);
-                pushMove(&moveStack, MOVE_FORWARD);
-
-                tempObjects = objects;
-                right(&tempObjects);
-                // forward(&tempObjects);
-
-                // if(tempObjects.robot.x == objects.robot.x && tempObjects.robot.y == objects.robot.y){
-                if(canGoForward(&tempObjects) == false){
-                    right(&objects);
-                    pushMove(&moveStack, TURN_RIGHT);
-
-                    right(&objects);
-                    pushMove(&moveStack, TURN_RIGHT);
-
-                    right(&objects);
-                    pushMove(&moveStack, TURN_RIGHT);
-                }else{
-                    right(&objects);
-                    pushMove(&moveStack, TURN_RIGHT);
-                }
-
-                
-            }
-
-        } else {
-            // Retrace steps back to spawn point
-            Move lastMove = popMove(&moveStack);
-            if (lastMove == MOVE_FORWARD) {
-                // Reverse forward move
-                reverseMove(&objects.robot, lastMove);
-            } else if (lastMove == TURN_RIGHT) {
-                // Reverse a right turn
-                reverseMove(&objects.robot, lastMove);
-            }
-        }
-
-
-        // Sleep or delay if necessary to visualize the movement
-    }
-
-    clearMoveStack(&moveStack); // Clean up any remaining moves
-
-    // End of game, can add any finalization logic here if needed
-    return 0;
 }
 
+void getBackHome(Robot *robot, char grid[gridWidth][gridHeight], MoveStack *moveStack) {
+    while (moveStack->top != NULL) {
+        Move lastMove = popMove(moveStack);
+            if (lastMove == MOVE_FORWARD) {
+                // Reverse forward move
+                reverseMove(robot, lastMove, grid);
+            } else if (lastMove == TURN_RIGHT) {
+                // Reverse a right turn
+                reverseMove(robot, lastMove, grid);
+            }
+    }
+}
+
+void main(void) {
+
+    Robot robot;
+    robot.carriesMarker = false;
+    char grid[gridWidth][gridHeight];
+    MoveStack moveStack = {NULL};
+
+    initGame(&robot, grid);
+
+    search(&robot, grid, &moveStack);
+
+    getBackHome(&robot, grid, &moveStack);
+
+    printf("Game Over: our soldier brought the flag home!");
+        
+}
