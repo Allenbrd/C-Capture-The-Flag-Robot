@@ -6,7 +6,7 @@ back to his spawn point by reversing all of his previous moves.
 This program has been written in the context of the UCL COMP0002 C project coursework.
 
 [![soldier searching for the flag](illustrations/pic1.png)](https://github.com/Allenbrd/C-Capture-The-Flag-Robot/blob/master/illustrations/pic1.png)
-[![soldier returning the flag home](illustrations/pic1.png)](https://github.com/Allenbrd/C-Capture-The-Flag-Robot/blob/master/illustrations/pic1.png)
+[![soldier returning the flag home](illustrations/pic2.png)](https://github.com/Allenbrd/C-Capture-The-Flag-Robot/blob/master/illustrations/pic2.png)
 
 ## How to run this code
 In order to start the program, compile and then run via the following commands:
